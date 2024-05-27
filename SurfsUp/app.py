@@ -112,9 +112,7 @@ def tobs():
     
     most_active_station_id = most_active_station[0].station
 
-    # Calculate the date 12 months ago from today
-    # No data available if using date 12 months from today.  Used 12 months from last date in the data
-    # twelve_months_ago = (dt.today() - timedelta(days=365)).date()
+    # Use 12 months from last date in the data
     twelve_months_ago = (most_recent_date_dt- timedelta(days=365)).date()
 
     # Query to get the last 12 months of temperature data for the most active station
@@ -179,11 +177,6 @@ def start_end(start_date,end_date):
     temperature_info_dict["Avg Temp"] = temperature_info_results.avg_temperature
 
     return jsonify(temperature_info_dict)
-
-
-    # # remove this when you are returning the jsonify
-    # return "You tried accessing the API \
-    # endpoint with value of 'start' as " + str(start_date) + " and with value of 'end' as " + str(end_date)
 
   
 
