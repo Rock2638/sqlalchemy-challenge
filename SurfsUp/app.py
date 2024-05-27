@@ -48,13 +48,13 @@ def welcome():
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
         f"/api/v1.0/specify a start date with format yyyy-mm-dd<br/>"
+        f"/api/v1.0/specify a start date with format yyyy-mm-dd/specify a end date with format yyyy-mm-dd<br/>"
     )
 
 @app.route("/api/v1.0/precipitation")
 def precipitation():
     # Create our session (link) from Python to the DB
     session = Session(engine)
-
 
     """Convert the query results to a dictionary by using date as the key and prcp as the value."""
     # Query to retrieve the last 12 months of precipitation data
@@ -148,7 +148,7 @@ def start(start_date):
 
     session.close()
 
-    # Convert the query results to a dictionary by using date as the key and prcp as the value.  No need to loop as only one result is returned from query
+    # Convert the query results to a dictionary by using date as the key and temperature as the value.  No need to loop as only one result is returned from query
     temperature_info_dict = {}
     temperature_info_dict["Min Temp"] = temperature_info_results.min_temperature
     temperature_info_dict["Max Temp"] = temperature_info_results.max_temperature
@@ -160,18 +160,32 @@ def start(start_date):
 @app.get('/api/v1.0/<start_date>/<end_date>')
 def start_end(start_date,end_date):
 
+     # Convert the string to a date 
+    start_date_dt = (dt.strptime(start_date, '%Y-%m-%d'))
+    end_date_dt = (dt.strptime(end_date, '%Y-%m-%d'))
+
+    session = Session(engine)
+
     # Do a query to get the minimum temperature, the average temperature, and the maximum temperature for the start_date and end_date
+    temperature_info_results = session.query(func.min(Measurement.tobs).label('min_temperature'),func.max(Measurement.tobs).label('max_temperature'), \
+    func.avg(Measurement.tobs).label('avg_temperature')).filter(Measurement.date.between(start_date_dt, end_date_dt)).one()
+    
+    session.close()
+
+    # Convert the query results to a dictionary by using date as the key and temperature as the value.  No need to loop as only one result is returned from query
+    temperature_info_dict = {}
+    temperature_info_dict["Min Temp"] = temperature_info_results.min_temperature
+    temperature_info_dict["Max Temp"] = temperature_info_results.max_temperature
+    temperature_info_dict["Avg Temp"] = temperature_info_results.avg_temperature
+
+    return jsonify(temperature_info_dict)
 
 
-    # Convert the query results to a dictionary.
+    # # remove this when you are returning the jsonify
+    # return "You tried accessing the API \
+    # endpoint with value of 'start' as " + str(start_date) + " and with value of 'end' as " + str(end_date)
 
-    # remove this when you are returning the jsonify
-    return "You tried accessing the API \
-    endpoint with value of 'start' as " + str(start_date) + " and with value of 'end' as " + str(end_date)
-
-    # return jsonify(.....)
-
-
+  
 
 if __name__ == '__main__':
     app.run(debug=True)
